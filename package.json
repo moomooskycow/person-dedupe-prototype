@@ -19,7 +19,7 @@
   "license": "MIT",
   "dependencies": {
     "better-sqlite3": "^11.9.1",
-    "next": "^15.1.6",
+    "next": "^15.5.25",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "uuid": "^11.0.5",
