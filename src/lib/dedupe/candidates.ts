@@ -60,8 +60,10 @@ function blockingKeys(p: Person): { rule: BlockingRule; key: string }[] {
  * Callers are responsible for filtering out pairs that are already known
  * (merged/dismissed/open) — this function is a pure function over the
  * people it's given.
+ * When focusId is provided, emit only pairs involving that person. This
+ * keeps candidate generation linear even when an existing block is large.
  */
-export function generateCandidatePairs(people: Person[]): CandidatePair[] {
+export function generateCandidatePairs(people: Person[], focusId?: string): CandidatePair[] {
   const blocks = new Map<string, { rule: BlockingRule; ids: Set<string> }>();
 
   for (const p of people) {
@@ -76,19 +78,31 @@ export function generateCandidatePairs(people: Person[]): CandidatePair[] {
   }
 
   const pairs = new Map<string, { pair: PersonPair; rules: Set<BlockingRule> }>();
+  function addPair(aId: string, bId: string, rule: BlockingRule) {
+    const pair = canonicalPair(aId, bId);
+    const key = pairKey(pair);
+    let entry = pairs.get(key);
+    if (!entry) {
+      entry = { pair, rules: new Set() };
+      pairs.set(key, entry);
+    }
+    entry.rules.add(rule);
+  }
+
   for (const { rule, ids } of blocks.values()) {
     if (ids.size < 2) continue;
+    if (focusId !== undefined) {
+      if (!ids.has(focusId)) continue;
+      for (const id of ids) {
+        if (id !== focusId) addPair(id, focusId, rule);
+      }
+      continue;
+    }
+
     const arr = [...ids];
     for (let i = 0; i < arr.length; i++) {
       for (let j = i + 1; j < arr.length; j++) {
-        const pair = canonicalPair(arr[i], arr[j]);
-        const key = pairKey(pair);
-        let entry = pairs.get(key);
-        if (!entry) {
-          entry = { pair, rules: new Set() };
-          pairs.set(key, entry);
-        }
-        entry.rules.add(rule);
+        addPair(arr[i], arr[j], rule);
       }
     }
   }

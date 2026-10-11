@@ -245,7 +245,7 @@ export function checkSingleRecord(db: Database.Database, draft: PersonDraft): Si
     updated_at: nowIso(),
   };
 
-  const candidatePairs = generateCandidatePairs([...people, draftPerson]).filter((p) => p.pair.includes(DRAFT_ID));
+  const candidatePairs = generateCandidatePairs([...people, draftPerson], DRAFT_ID);
   const getBookings = bookingsLoader(db);
   const peopleById = new Map(people.map((p) => [p.id, p]));
 
